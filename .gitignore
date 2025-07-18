@@ -1,0 +1,51 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment (if outside .venv folder)
+.env/
+.venv/
+venv/
+ENV/
+env/
+*.env
+
+# Poetry
+poetry.lock
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Python egg info
+*.egg-info/
+dist/
+build/
+
+# Logs
+*.log
+
+# Pytest cache
+.pytest_cache/
+
+# mypy, coverage, etc
+.mypy_cache/
+.coverage
+htmlcov/
+.cache/
+coverage.xml
+
+# Front-end (nếu bạn build ra static files)
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Optional: Ignore generated OpenAPI schema/docs
+openapi.json
+docs/
