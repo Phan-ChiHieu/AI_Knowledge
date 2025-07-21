@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """FastAPI application entry-point for the recipe chatbot."""
 
 from pathlib import Path
@@ -9,6 +11,9 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+
+from backend.utils import get_agent_response  # noqa: WPS433 import from parent
 
 
 # -----------------------------------------------------------------------------
@@ -28,9 +33,71 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 # -----------------------------------------------------------------------------
 
 
+class ChatMessage(BaseModel):
+    """Schema for a single message in the chat history."""
+
+    role: str = Field(
+        ..., description="Role of the message sender (system, user, or assistant)."
+    )
+    content: str = Field(..., description="Content of the message.")
+
+
+class ChatRequest(BaseModel):
+    """Schema for incoming chat messages."""
+
+    messages: List[ChatMessage] = Field(
+        ..., description="The entire conversation history."
+    )
+
+
+class ChatResponse(BaseModel):
+    """Schema for the assistant's reply returned to the front-end."""
+
+    messages: List[ChatMessage] = Field(
+        ..., description="The updated conversation history."
+    )
+
+
 # -----------------------------------------------------------------------------
 # Routes
 # -----------------------------------------------------------------------------
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(payload: ChatRequest) -> ChatResponse:  # noqa: WPS430
+    """Main conversational endpoint.
+
+    It proxies the user's message list to the underlying agent and returns the updated list.
+    """
+    # Convert Pydantic models to simple dicts for the agent
+    request_messages: List[Dict[str, str]] = [
+        msg.model_dump() for msg in payload.messages
+    ]
+
+    try:
+        updated_messages_dicts = get_agent_response(request_messages)
+    except Exception as exc:  # noqa: BLE001 broad; surface as HTTP 500
+        # In production you would log the traceback here.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(exc),
+        ) from exc
+
+    response = ChatResponse(
+        messages=[ChatMessage(**msg) for msg in updated_messages_dicts]
+    )
+
+    # Save trace (request and response) in one place
+    traces_dir = Path(__file__).parent.parent / "annotation" / "traces"
+    traces_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    trace_path = traces_dir / f"trace_{ts}.json"
+    with open(trace_path, "w") as f:
+        json.dump(
+            {"request": payload.model_dump(), "response": response.model_dump()}, f
+        )
+
+    return response
 
 
 @app.get("/", response_class=HTMLResponse)
