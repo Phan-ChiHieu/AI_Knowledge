@@ -70,3 +70,46 @@ Dữ liệu liên quan: ..."
 
 - LLM dùng các đoạn đã **retrieve** làm **context**
 - Dự đoán câu trả lời dựa vào thông tin đó (không cần nhớ từ trước)
+
+━━━━━━━━━━━━━━━━━━ ∘◦ ✧ ✦ ✧ ◦∘ ━━━━━━━━━━━━━━━━━━
+
+## ✅ Ví dụ minh họa (cụ thể, dễ hiểu)
+
+### 🎯 Bài toán: Chatbot nội bộ công ty
+
+Bạn muốn hỏi:
+
+> "Công ty có bao nhiêu ngày nghỉ phép/năm?"
+
+LLM như GPT-4 không biết, vì không được huấn luyện với nội quy công ty bạn.
+
+RAG hoạt động như sau:
+
+1. Chia **file PDF nội quy công ty** thành 100 đoạn nhỏ
+2. Tạo embedding cho từng đoạn → Lưu vào vector DB
+3. Câu hỏi → tạo embedding → so sánh với 100 đoạn
+4. Tìm thấy đoạn:
+   > "Mỗi nhân viên được nghỉ 12 ngày phép có lương mỗi năm…"
+5. Đưa đoạn này vào prompt → GPT trả lời đúng.
+
+━━━━━━━━━━━━━━━━━━ ∘◦ ✧ ✦ ✧ ◦∘ ━━━━━━━━━━━━━━━━━━
+
+## ✅ Tóm tắt 80/20
+
+| Thành phần | Mục đích                                      |
+| ---------- | --------------------------------------------- |
+| Chunking   | Chia tài liệu thành đoạn nhỏ                  |
+| Embedding  | Chuyển đoạn thành vector ngữ nghĩa            |
+| Vector DB  | Lưu trữ các vector để tìm kiếm semantic       |
+| Retrieval  | Tìm đoạn liên quan đến câu hỏi                |
+| Generation | LLM sinh câu trả lời dựa vào đoạn đã tìm được |
+
+━━━━━━━━━━━━━━━━━━ ∘◦ ✧ ✦ ✧ ◦∘ ━━━━━━━━━━━━━━━━━━
+
+## 📌 Lưu ý quan trọng
+
+- RAG ≠ fine-tuning → không thay đổi trọng số mô hình
+
+- RAG chỉ **thêm kiến thức mới vào lúc hỏi**, không cần training lại
+
+- Có thể **cập nhật dữ liệu theo thời gian thực** (tài liệu thay đổi liên tục)
